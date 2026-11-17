@@ -42,29 +42,29 @@ graph LR
 
 ```mermaid
 flowchart TD
-    Inicio([Inicio / Reposo]) --> LeerReloj[Muestrear Hora RTC DS3231]
-    LeerReloj --> MostrarTFT[Actualizar Reloj TFT y Turno Activo]
-    MostrarTFT --> CheckRFID{¿Tarjeta Detectada?}
+    Inicio(["Inicio / Reposo"]) --> LeerReloj["Muestrear Hora RTC DS3231"]
+    LeerReloj --> MostrarTFT["Actualizar Reloj TFT y Turno Activo"]
+    MostrarTFT --> CheckRFID{"¿Tarjeta Detectada?"}
     
     CheckRFID -- No --> LeerReloj
-    CheckRFID -- Sí --> LeerUID[Leer UID por Bus SPI 2 MFRC522]
+    CheckRFID -- Sí --> LeerUID["Leer UID por Bus SPI 2 MFRC522"]
     
-    LeerUID --> ValidarUID{¿UID Registrado?}
-    ValidarUID -- No --> DenegarAcceso[Activar LED Rojo + Beep Grave 400Hz + Mostrar Denegado]
-    DenegarAcceso --> TimerEspera[Pausa 3s] --> Inicio
+    LeerUID --> ValidarUID{"¿UID Registrado?"}
+    ValidarUID -- No --> DenegarAcceso["Activar LED Rojo + Beep Grave 400Hz + Mostrar Denegado"]
+    DenegarAcceso --> TimerEspera["Pausa 3s"] --> Inicio
     
-    ValidarUID -- Sí --> ObtenerTurno[Consultar Turno Asignado en NVS]
-    ObtenerTurno --> EvaluarTolerancia{¿Llega con Retardo?}
+    ValidarUID -- Sí --> ObtenerTurno["Consultar Turno Asignado en NVS"]
+    ObtenerTurno --> EvaluarTolerancia{"¿Llega con Retardo?"}
     
-    EvaluarTolerancia -- No --> MarcarPuntual[Estado: Puntual (0 min)]
-    EvaluarTolerancia -- Sí --> CalcularRetardo[Calcular Minutos de Retardo]
+    EvaluarTolerancia -- No --> MarcarPuntual["Estado: Puntual (0 min)"]
+    EvaluarTolerancia -- Sí --> CalcularRetardo["Calcular Minutos de Retardo"]
     
-    MarcarPuntual --> GuardarRegistro[Escribir en LittleFS NVS con Timestamp RTC]
+    MarcarPuntual --> GuardarRegistro["Escribir en LittleFS NVS con Timestamp RTC"]
     CalcularRetardo --> GuardarRegistro
     
-    GuardarRegistro --> FeedbackExito[Activar LED Verde + Chime 1800Hz + Mostrar Datos en TFT]
-    FeedbackExito --> NotificarBuffer[Incrementar Contador de Buffer Offline]
-    NotificarBuffer --> TimerExito[Pausa 4s] --> Inicio
+    GuardarRegistro --> FeedbackExito["Activar LED Verde + Chime 1800Hz + Mostrar Datos en TFT"]
+    FeedbackExito --> NotificarBuffer["Incrementar Contador de Buffer Offline"]
+    NotificarBuffer --> TimerExito["Pausa 4s"] --> Inicio
 ```
 
 ---
