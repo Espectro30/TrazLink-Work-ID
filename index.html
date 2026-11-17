@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrazLink™ Work-ID | Terminal de Control de Asistencia y Nómina</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-dark: #030712;
+            --cyan-core: #00e5ff;
+            --emerald-glow: #10b981;
+            --amber-warn: #f59e0b;
+            --crimson-alert: #ef4444;
+            --card-slate: #0b1329;
+            --border-tech: #1e293b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #e2e8f0;
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+            width: 100vw;
+            min-height: 100vh;
+        }
+
+        .font-orbitron { font-family: 'Orbitron', sans-serif; }
+        .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
+        .font-mono-tech { font-family: 'Share Tech Mono', monospace; }
+        .font-inter { font-family: 'Inter', sans-serif; }
+
+        .glow-cyan {
+            text-shadow: 0 0 15px rgba(0, 229, 255, 0.7), 0 0 35px rgba(0, 229, 255, 0.3);
+        }
+        .glow-emerald {
+            text-shadow: 0 0 15px rgba(16, 185, 129, 0.7), 0 0 35px rgba(16, 185, 129, 0.3);
+        }
+
+        .bg-tech-grid {
+            background-image: 
+                linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 229, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        #presentation-viewport {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        #slide-stage {
+            width: 100%;
+            max-width: 1600px;
+            height: 900px;
+            max-height: 95vh;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slide-pane {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.97);
+            transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: 2.5rem 3.5rem;
+            border-radius: 1.25rem;
+            background: radial-gradient(circle at 50% 20%, rgba(15, 23, 42, 0.95), rgba(3, 7, 18, 0.98));
+            border: 1px solid rgba(0, 229, 255, 0.15);
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 229, 255, 0.05);
+            overflow-y: auto;
+        }
+
+        .slide-pane.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1);
+        }
+
+        .slide-pane::-webkit-scrollbar {
+            width: 6px;
+        }
+        .slide-pane::-webkit-scrollbar-thumb {
+            background: rgba(0, 229, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .lcd-display {
+            background-color: #000a12;
+            box-shadow: inset 0 0 15px rgba(0, 229, 255, 0.3);
+            border: 3px solid #1e293b;
+        }
+    </style>
+</head>
+<body class="bg-tech-grid min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-black">
+
+    <!-- BARRA SUPERIOR HUD -->
+    <header class="w-full bg-slate-950/80 backdrop-blur-md border-b border-slate-800/80 px-6 py-3 flex items-center justify-between z-50 fixed top-0 left-0">
+        <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-2">
+                <span class="w-3 h-3 rounded-full bg-cyan-400 animate-ping"></span>
+                <span class="font-orbitron font-black text-xl tracking-wider text-cyan-400 glow-cyan">TRAZLINK<span class="text-white">™</span> WORK-ID</span>
+            </div>
+            <span class="text-xs font-mono-tech px-2.5 py-0.5 rounded bg-cyan-950/70 border border-cyan-800 text-cyan-300">ÁREA: INDUSTRIA Y PRODUCTIVIDAD</span>
+            <span class="hidden md:inline-block text-xs font-mono-tech text-slate-400 border-l border-slate-700 pl-4">
+                ARQUITECTURA DEL COMPUTADOR • UNEFA 2026
+            </span>
+        </div>
+
+        <!-- CONTROLES CENTRALES DE NAVEGACIÓN -->
+        <div class="flex items-center space-x-3">
+            <button id="btn-prev" class="w-9 h-9 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-400 text-slate-300 hover:text-cyan-400 flex items-center justify-center transition shadow-lg" title="Anterior (←)">
+                <i class="fa-solid fa-chevron-left text-sm"></i>
+            </button>
+            <div class="px-3 py-1 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono-tech text-cyan-300 min-w-[70px] text-center">
+                <span id="slide-num-current">01</span> / <span id="slide-num-total">14</span>
+            </div>
+            <button id="btn-next" class="w-9 h-9 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-400 text-slate-300 hover:text-cyan-400 flex items-center justify-center transition shadow-lg" title="Siguiente (→ / Espacio)">
+                <i class="fa-solid fa-chevron-right text-sm"></i>
+            </button>
+        </div>
+
+        <!-- ACCIONES RÁPIDAS -->
+        <div class="flex items-center space-x-3">
+            <button id="btn-sound" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-400 text-xs font-mono-tech text-slate-300 flex items-center space-x-1.5 transition" title="Alternar Sonidos de Hardware (M)">
+                <i id="sound-icon" class="fa-solid fa-volume-high text-cyan-400"></i>
+                <span class="hidden sm:inline">SFX</span>
+            </button>
+            <button id="btn-jump-sim" class="px-3 py-1.5 rounded-lg bg-cyan-950/60 border border-cyan-500/60 hover:bg-cyan-500 hover:text-black text-xs font-orbitron font-semibold text-cyan-300 transition flex items-center space-x-1.5 shadow">
+                <i class="fa-solid fa-microchip"></i>
+                <span>STAND EN VIVO</span>
+            </button>
+            <button id="btn-fullscreen" class="w-9 h-9 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-400 text-slate-300 hover:text-cyan-400 flex items-center justify-center transition" title="Pantalla Completa (F)">
+                <i class="fa-solid fa-expand text-sm"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- ÁREA PRINCIPAL DE PRESENTACIÓN -->
+    <main id="presentation-viewport" class="pt-16 pb-12 px-4 flex items-center justify-center">
+        <div id="slide-stage">
+
+            <!-- ========================================== -->
+            <!-- SLIDE 0: PORTADA FORMAL DEL PROYECTO -->
+            <!-- ========================================== -->
+            <section class="slide-pane active" data-slide="0">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <span class="font-mono-tech text-xs text-cyan-400 tracking-wider">DEFENSA DE PROYECTO • ARQUITECTURA DEL COMPUTADOR</span>
+                    <span class="font-mono-tech text-xs text-slate-400">ÁREA: INDUSTRIA Y PRODUCTIVIDAD • FAMILIA LINK</span>
+                </div>
+
+                <div class="flex flex-col items-center justify-center text-center my-auto py-6">
+                    <div class="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-cyan-950/70 border border-cyan-500/50 text-cyan-300 text-xs font-mono-tech tracking-widest uppercase mb-4 shadow-lg shadow-cyan-950/50">
+                        <i class="fa-solid fa-industry text-cyan-400"></i>
+                        <span>Terminal IoT de Control de Asistencia, Turnos y Nómina (Familia AulaLink™)</span>
+                    </div>
+
+                    <h1 class="font-orbitron font-black text-5xl md:text-7xl tracking-tight text-white mb-2 glow-cyan">
+                        TRAZLINK<span class="text-cyan-400">™</span>
+                    </h1>
+                    <h2 class="font-rajdhani font-bold text-2xl md:text-3xl text-cyan-300 tracking-[0.2em] uppercase mb-4">
+                        WORK-ID • ARQUITECTURA ESP32-S3
+                    </h2>
+                    <p class="font-inter text-slate-300 max-w-2xl text-base font-light leading-relaxed mb-8">
+                        <em>"Trazabilidad forense e identidad laboral en el borde."</em><br>
+                        Terminal de pared autónomo con buses aislados (DMA), reloj RTC inmutable con batería LIR2032 y motor de cómputo de horas y nómina.
+                    </p>
+
+                    <!-- EQUIPO DE TRABAJO -->
+                    <div class="w-full max-w-4xl grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 text-center">
+                        <div class="p-3 bg-slate-900/90 border border-slate-800 rounded-xl hover:border-cyan-500/50 transition">
+                            <span class="text-[10px] font-mono-tech text-cyan-400 uppercase tracking-wider block">Desarrollador</span>
+                            <h3 class="font-rajdhani font-bold text-white text-base leading-tight mt-1">Angel Delgado</h3>
+                            <span class="text-xs font-mono-tech text-slate-400">C.I. 30.663.790</span>
+                        </div>
+                        <div class="p-3 bg-slate-900/90 border border-slate-800 rounded-xl hover:border-cyan-500/50 transition">
+                            <span class="text-[10px] font-mono-tech text-cyan-400 uppercase tracking-wider block">Desarrollador</span>
+                            <h3 class="font-rajdhani font-bold text-white text-base leading-tight mt-1">Carlos García</h3>
+                            <span class="text-xs font-mono-tech text-slate-400">C.I. 31.507.848</span>
+                        </div>
+                        <div class="p-3 bg-slate-900/90 border border-slate-800 rounded-xl hover:border-cyan-500/50 transition">
+                            <span class="text-[10px] font-mono-tech text-cyan-400 uppercase tracking-wider block">Desarrollador</span>
+                            <h3 class="font-rajdhani font-bold text-white text-base leading-tight mt-1">Williamsnis Acosta</h3>
+                            <span class="text-xs font-mono-tech text-slate-400">C.I. 31.797.435</span>
+                        </div>
+                        <div class="p-3 bg-slate-900/90 border border-slate-800 rounded-xl hover:border-cyan-500/50 transition">
+                            <span class="text-[10px] font-mono-tech text-cyan-400 uppercase tracking-wider block">Desarrollador</span>
+                            <h3 class="font-rajdhani font-bold text-white text-base leading-tight mt-1">Corina Suárez</h3>
+                            <span class="text-xs font-mono-tech text-slate-400">C.I. 31.786.288</span>
+                        </div>
+                        <div class="p-3 bg-slate-900/90 border border-slate-800 rounded-xl hover:border-cyan-500/50 transition">
+                            <span class="text-[10px] font-mono-tech text-cyan-400 uppercase tracking-wider block">Desarrollador</span>
+                            <h3 class="font-rajdhani font-bold text-white text-base leading-tight mt-1">Alexis Gutierrez</h3>
+                            <span class="text-xs font-mono-tech text-slate-400">C.I. 31.563.986</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between border-t border-slate-800/80 pt-3 text-xs font-mono-tech text-slate-500">
+                    <span>ESP32-S3-DevKitC-1 N16R8 • ILI9341 2.8'' SPI DMA • MFRC522 • DS3231</span>
+                    <span class="text-cyan-400">Presiona [Espacio] o [→] para Iniciar ▶</span>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- SLIDE 1: INTRODUCCIÓN Y PLANTEAMIENTO DEL PROBLEMA -->
+            <!-- ========================================== -->
+            <section class="slide-pane" data-slide="1">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <span class="font-mono-tech text-xs text-amber-400">01 // INTRODUCCIÓN & PLANTEAMIENTO DEL PROBLEMA</span>
+                    <span class="font-mono-tech text-xs text-slate-400">ÁREA: INDUSTRIA Y PRODUCTIVIDAD</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 my-auto items-center">
+                    <div class="space-y-4">
+                        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-md bg-amber-950/60 border border-amber-500/50 text-amber-400 text-xs font-mono-tech">
+                            <i class="fa-solid fa-circle-question"></i>
+                            <span>¿Por qué es necesario este producto?</span>
+                        </div>
+                        <h2 class="font-orbitron font-bold text-3xl text-white">
+                            La Problemática del Control Laboral en la Industria
+                        </h2>
+                        <p class="font-inter text-slate-300 text-sm leading-relaxed">
+                            En pequeñas y medianas empresas, talleres mecánicos, almacenes logísticos y fábricas con turnos rotativos, la gestión de asistencia y puntualidad adolece de serias deficiencias operativas:
+                        </p>
+                        <ul class="space-y-2 font-inter text-xs text-slate-300">
+                            <li class="flex items-start space-x-2">
+                                <span class="text-red-400 font-bold">✕</span>
+                                <span><strong>Vulnerabilidad de registros tradicionales:</strong> Las listas en papel o libros manuales de firmas sufren de falsificación y suplantación de identidad.</span>
+                            </li>
+                            <li class="flex items-start space-x-2">
+                                <span class="text-red-400 font-bold">✕</span>
+                                <span><strong>Barrera económica de terminales propietarios:</strong> Soluciones comerciales de marcas cerradas (ZKTeco, Hikvision) tienen costos de $350-$600 USD y cobran suscripciones en la nube.</span>
+                            </li>
+                            <li class="flex items-start space-x-2">
+                                <span class="text-red-400 font-bold">✕</span>
+                                <span><strong>Fallas por pérdida de red:</strong> Relojes biométricos comerciales colapsan o pierden marcas cuando el enlace WiFi o la energía eléctrica se interrumpe.</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="space-y-4 p-5 rounded-2xl bg-slate-900/90 border border-slate-800">
+                        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-md bg-emerald-950/60 border border-emerald-500/50 text-emerald-400 text-xs font-mono-tech">
+                            <i class="fa-solid fa-bullseye"></i>
+                            <span>¿Qué necesidad resuelve?</span>
+                        </div>
+                        <h3 class="font-orbitron font-bold text-xl text-white">
+                            Automatización Forense de Turnos y Pre-Nómina
+                        </h3>
+                        <p class="font-inter text-slate-300 text-xs leading-relaxed">
+                            <strong>TrazLink™ Work-ID</strong> resuelve integralmente la trazabilidad del tiempo laboral implementando un terminal de acceso montado en pared:
+                        </p>
+                        <div class="space-y-3 font-mono-tech text-xs">
+                            <div class="p-3 bg-slate-950 rounded-lg border-l-2 border-cyan-400">
+                                <strong class="text-cyan-300 block">Marcaje Ultrarrápido (< 200 ms)</strong>
+                                Identificación con tarjetas inteligentes RFID de 13.56 MHz (Mifare Classic 1K).
+                            </div>
+                            <div class="p-3 bg-slate-950 rounded-lg border-l-2 border-emerald-400">
+                                <strong class="text-emerald-300 block">Inmutabilidad Temporal (Hardware RTC)</strong>
+                                Oscilador TCXO con batería LIR2032 recargable que previene alteraciones de horario y fraude salarial.
+                            </div>
+                            <div class="p-3 bg-slate-950 rounded-lg border-l-2 border-amber-400">
+                                <strong class="text-amber-300 block">Cálculo Salarial en el Borde (Edge Computing)</strong>
+                                Discrimina horas ordinarias, recargos nocturnos (+30%), horas extra diurnas (+50%) y retardos en tiempo real.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between border-t border-slate-800 pt-3 text-xs font-mono-tech text-slate-500">
+                    <span>SECCIÓN 01: INTRODUCCIÓN Y JUSTIFICACIÓN</span>
+                    <span>PÁGINA 02 / 14</span>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- SLIDE 2: ENFOQUE COMERCIAL Y PLAN DE NEGOCIO -->
+            <!-- ========================================== -->
+            <section class="slide-pane" data-slide="2">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <span class="font-mono-tech text-xs text-emerald-400">02 // ENFOQUE COMERCIAL & PLAN DE NEGOCIO</span>
+                    <span class="font-mono-tech text-xs text-slate-400">CRITERIO DE VALOR EN VENTA</span>
+                </div>
+
+                <div class="my-auto space-y-6">
+                    <div class="text-center max-w-3xl mx-auto">
+                        <h2 class="font-orbitron font-bold text-3xl text-white">
+                            ¿Por qué un Empresario Pagaría por Este Producto?
+                        </h2>
+                        <p class="font-inter text-slate-300 text-sm">
+                            El proyecto cumple con la exigencia comercial de la cátedra: resuelve una necesidad tangible y ofrece un retorno de inversión inmediato.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 font-inter text-xs">
+                        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
+                            <div class="w-9 h-9 rounded-lg bg-cyan-950 border border-cyan-500/40 text-cyan-400 flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                            <h3 class="font-orbitron font-bold text-white text-sm">Cliente Ideal</h3>
+                            <ul class="text-slate-300 space-y-1.5 list-disc list-inside">
+                                <li><strong>PyMEs de 10 a 200 empleados:</strong> Empresas comerciales, distribuidores y plantas.</li>
+                                <li><strong>Talleres Industriales y Manufactura:</strong> Operaciones con turnos diurnos, vespertinos y nocturnos.</li>
+                                <li><strong>Centros de Distribución y Almacenes:</strong> Puntos de control logístico de personal de carga.</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
+                            <div class="w-9 h-9 rounded-lg bg-emerald-950 border border-emerald-500/40 text-emerald-400 flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-hand-holding-dollar"></i>
+                            </div>
+                            <h3 class="font-orbitron font-bold text-white text-sm">Propuesta de Valor Comercial</h3>
+                            <ul class="text-slate-300 space-y-1.5 list-disc list-inside">
+                                <li><strong>Ahorro superior al 55%:</strong> Costo de adquisición drásticamente menor a la competencia propietaria.</li>
+                                <li><strong>Cero Licencias Mensuales:</strong> El cliente es dueño absoluto de su hardware y sus datos locales.</li>
+                                <li><strong>Eliminación de Litigios Laborales:</strong> Marcas auditadas con reloj inmutable con validez forense.</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
+                            <div class="w-9 h-9 rounded-lg bg-amber-950 border border-amber-500/40 text-amber-400 flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-shop"></i>
+                            </div>
+                            <h3 class="font-orbitron font-bold text-white text-sm">Estrategia de Venta</h3>
+                            <ul class="text-slate-300 space-y-1.5 list-disc list-inside">
+                                <li><strong>Modelo Llave en Mano:</strong> Venta del terminal físico configurado con 25 tarjetas RFID por $160 USD.</li>
+                                <li><strong>Servicio de Instalación y Soporte:</strong> Paquete opcional de integración con software contable.</li>
+                                <li><strong>Reemplazo Rápido:</strong> Disponibilidad inmediata de repuestos estándar de hardware abierto.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between border-t border-slate-800 pt-3 text-xs font-mono-tech text-slate-500">
+                    <span>SECCIÓN 02: PLAN DE NEGOCIO</span>
+                    <span>PÁGINA 03 / 14</span>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- SLIDE 3: DIAGRAMA DE FLUJO (LÓGICA DEL SISTEMA) -->
+            <!-- ========================================== -->
+            <section class="slide-pane" data-slide="3">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <span class="font-mono-tech text-xs text-cyan-400">03 // DESARROLLO TÉCNICO: DIAGRAMA DE FLUJO</span>
+                    <span class="font-mono-tech text-xs text-slate-400">LÓGICA DE CONTROL DEL MICROCONTROLADOR</span>
+                </div>
+
+                <div class="my-auto space-y-5">
+                    <div class="text-center max-w-2xl mx-auto">
+                        <h2 class="font-orbitron font-bold text-2xl md:text-3xl text-white">
+                            Flujo Secuencial de Detección, Validación y Cómputo
+                        </h2>
+                        <p class="font-inter text-slate-300 text-xs">
+                            Algoritmo determinista ejecutado entre los dos núcleos del ESP32-S3.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-3 font-mono-tech text-xs">
+                        <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 text-center space-y-2">
+                            <span class="w-6 h-6 rounded-full bg-cyan-950 border border-cyan-500 text-cyan-400 inline-flex items-center justify-center font-bold">1</span>
+                            <h4 class="font-bold text-white text-xs">REPOSO & RTC</h4>
+                            <p class="text-[11px] text-slate-400">Muestreo continuo del RTC DS3231 por I2C y refresco del reloj TFT vía SPI DMA.</p>
+                        </div>
+                        <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 text-center space-y-2">
+                            <span class="w-6 h-6 rounded-full bg-cyan-950 border border-cyan-500 text-cyan-400 inline-flex items-center justify-center font-bold">2</span>
+                            <h4 class="font-bold text-white text-xs">LECTURA RFID</h4>
+                            <p class="text-[11px] text-slate-400">Interrupción en MFRC522 (Bus SPI 2). Se captura el UID del carnet en menos de 50ms.</p>
+                        </div>
+                        <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 text-center space-y-2">
+                            <span class="w-6 h-6 rounded-full bg-cyan-950 border border-cyan-500 text-cyan-400 inline-flex items-center justify-center font-bold">3</span>
+                            <h4 class="font-bold text-white text-xs">VALIDACIÓN NVS</h4>
+                            <p class="text-[11px] text-slate-400">Verificación del UID contra la tabla local indexada en memoria flash interna.</p>
+                        </div>
+                        <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 text-center space-y-2">
+                            <span class="w-6 h-6 rounded-full bg-cyan-950 border border-cyan-500 text-cyan-400 inline-flex items-center justify-center font-bold">4</span>
+                            <h4 class="font-bold text-white text-xs">CÓMPUTO SALARIAL</h4>
+                            <p class="text-[11px] text-slate-400">Cálculo de tolerancia, retardo, horas ordinarias y recargos nocturnos o extras.</p>
+                        </div>
+                        <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 text-center space-y-2">
+                            <span class="w-6 h-6 rounded-full bg-cyan-950 border border-cyan-500 text-cyan-400 inline-flex items-center justify-center font-bold">5</span>
+                            <h4 class="font-bold text-white text-xs">FEEDBACK & BUFFER</h4>
+                            <p class="text-[11px] text-slate-400">TFT muestra confirmación, buzzer emite chime y el registro se guarda en LittleFS.</p>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-cyan-950/30 border border-cyan-800/60 rounded-xl text-center text-xs font-mono-tech text-cyan-300">
+                        <span>Tiempo total de ciclo de marcaje: <strong>&lt; 180 milisegundos</strong> (Arquitectura reactiva y no bloqueante)</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between border-t border-slate-800 pt-3 text-xs font-mono-tech text-slate-500">
+                    <span>SECCIÓN 03: DIAGRAMA DE FLUJO</span>
+                    <span>PÁGINA 04 / 14</span>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- SLIDE 4: DIAGRAMA ESQUEMÁTICO & MAPEO DE PINES -->
+            <!-- ========================================== -->
+            <section class="slide-pane" data-slide="4">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <span class="font-mono-tech text-xs text-cyan-400">04 // DESARROLLO TÉCNICO: DIAGRAMA ESQUEMÁTICO</span>
+                    <span class="font-mono-tech text-xs text-emerald-400">TOPOLOGÍA DE BUSES AISLADOS</span>
+                </div>
+
+                <div class="my-auto space-y-6">
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div>
+                            <h2 class="font-orbitron font-bold text-2xl md:text-3xl text-white">
+                                Conexiones Físicas y Buses del Microcontrolador
+                            </h2>
+                            <p class="font-inter text-slate-300 text-sm">
+                                Compatibilidad 100% con la familia Arduino / ESP32. Sin contención en canales de comunicación.
+                            </p>
+                        </div>
+                        <div class="text-xs font-mono-tech bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800 text-cyan-300">
+                            SoC: ESP32-S3-DevKitC-1 N16R8
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono-tech text-xs">
+                        <div class="p-4 rounded-xl bg-slate-900/90 border border-cyan-500/40 space-y-2">
+                            <span class="font-orbitron font-bold text-cyan-400 text-sm block border-b border-cyan-900 pb-1">TFT ILI9341 (SPI 1 DMA)</span>
+                            <div class="text-slate-300 space-y-1">
+                                <div class="flex justify-between"><span>MOSI (Datos):</span><strong class="text-cyan-300">GPIO 11</strong></div>
+                                <div class="flex justify-between"><span>SCK (Reloj):</span><strong class="text-cyan-300">GPIO 12</strong></div>
+                                <div class="flex justify-between"><span>CS (Chip Select):</span><strong class="text-cyan-300">GPIO 10</strong></div>
+                                <div class="flex justify-between"><span>DC (Data/Cmd):</span><strong class="text-cyan-300">GPIO 14</strong></div>
+                                <div class="flex justify-between"><span>RST (Reset):</span><strong class="text-cyan-300">GPIO 15</strong></div>
+                            </div>
+                            <span class="text-[10px] text-slate-400 block pt-1 border-t border-slate-800">40 MHz Frecuencia SPI con DMA</span>
+                        </div>
+
+                        <div class="p-4 rounded-xl bg-slate-900/90 border border-amber-500/40 space-y-2">
+                            <span class="font-orbitron font-bold text-amber-400 text-sm block border-b border-amber-900 pb-1">RFID MFRC522 (SPI 2 HSPI)</span>
+                            <div class="text-slate-300 space-y-1">
+                                <div class="flex justify-between"><span>MOSI:</span><strong class="text-amber-300">GPIO 16</strong></div>
+                                <div class="flex justify-between"><span>MISO:</span><strong class="text-amber-300">GPIO 17</strong></div>
+                                <div class="flex justify-between"><span>SCK:</span><strong class="text-amber-300">GPIO 18</strong></div>
+                                <div class="flex justify-between"><span>SDA (CS):</span><strong class="text-amber-300">GPIO 4</strong></div>
+                                <div class="flex justify-between"><span>RST:</span><strong class="text-amber-300">GPIO 5</strong></div>
+                            </div>
+                            <span class="text-[10px] text-slate-400 block pt-1 border-t border-slate-800">10 MHz Bus Aislado Secundario</span>
+                        </div>
+
+                        <div class="p-4 rounded-xl bg-slate-900/90 border border-emerald-500/40 space-y-2">
+                            <span class="font-orbitron font-bold text-emerald-400 text-sm block border-b border-emerald-900 pb-1">RTC DS3231 + LIR2032</span>
+                            <div class="text-slate-300 space-y-1">
+                                <div class="flex justify-between"><span>I2C SDA:</span><strong class="text-emerald-300">GPIO 8</strong></div>
+                                <div class="flex justify-between"><span>I2C SCL:</span><strong class="text-emerald-300">GPIO 9</strong></div>
+                                <div class="flex justify-between"><span>Batería:</span><strong class="text-emerald-300">LIR2032 (3.6V)</strong></div>
+                                <div class="flex justify-between"><span>Buzzer Activo:</span><strong class="text-emerald-300">GPIO 3</strong></div>
+                                <div class="flex justify-between"><span>LEDs Bicolor:</span><strong class="text-emerald-300">GPIO 6 / 7</strong></div>
+                            </div>
+                            <span class="text-[10px] text-slate-400 block pt-1 border-t border-slate-800">I2C Fast-Mode a 400 kHz</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between border-t border-slate-800 pt-3 text-xs font-mono-tech text-slate-500">
+                    <span>SECCIÓN 04: ESQUEMÁTICO Y MAPEO DE HARDWARE</span>
+                    <span>PÁGINA 05 / 14</span>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- SLIDE 5: DIAGRAMA DE FUNCIONALIDAD (CASOS DE USO) -->
+            <!-- ========================================== -->
+            <section class="slide-pane" data-slide="5">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <span class="font-mono-tech text-xs text-cyan-400">05 // DESARROLLO TÉCNICO: CASOS DE USO</span>
+                    <span class="font-mono-tech text-xs text-slate-400">MODELADO UML DE INTERACCIÓN</span>
+                </div>
+
+                <div class="my-auto space-y-6">
+                    <div class="text-center max-w-2xl mx-auto">
+                        <h2 class="font-orbitron font-bold text-3xl text-white">
+                            Diagrama de Funcionalidad y Actores
+                        </h2>
+                        <p class="font-inter text-slate-300 text-sm">
+                            Distribución de casos de uso entre el personal operativo, supervisores y el terminal de pared.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 font-inter text-xs">
+                        <div class="p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-4">
+                            <div class="flex items-center space-x-3 text-cyan-400 font-orbitron font-bold text-sm">
+                                <i class="fa-solid fa-user-check text-lg"></i>
+                                <span>Actor 1: Trabajador / Empleado</span>
+                            </div>
+                            <div class="space-y-2 font-mono-tech text-slate-300">
+                                <div class="p-2 bg-slate-950 rounded border border-slate-800">
+                                    <strong>CU-01: Aproximar Tarjeta RFID:</strong> Presentar el carnet para validar su identidad en menos de 200ms.
+                                </div>
+                                <div class="p-2 bg-slate-950 rounded border border-slate-800">
+                                    <strong>CU-02: Seleccionar Tipo de Evento:</strong> Elegir Entrada, Salida a Almuerzo, Retorno o Salida mediante el panel táctil.
+                                </div>
+                                <div class="p-2 bg-slate-950 rounded border border-slate-800">
+                                    <strong>CU-03: Visualizar Diagnóstico:</strong> Comprobar estado de puntualidad y turno activo en la pantalla LCD.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-4">
+                            <div class="flex items-center space-x-3 text-emerald-400 font-orbitron font-bold text-sm">
+                                <i class="fa-solid fa-user-tie text-lg"></i>
+                                <span>Actor 2: Administrador / Recursos Humanos</span>
+                            </div>
+                            <div class="space-y-2 font-mono-tech text-slate-300">
+                                <div class="p-2 bg-slate-950 rounded border border-slate-800">
+                                    <strong>CU-04: Gestión de Turnos y Personal:</strong> Alta y asignación de horarios diurnos, vespertinos o nocturnos.
+                                </div>
+                                <div class="p-2 bg-slate-950 rounded border border-slate-800">
+                                    <strong>CU-05: Sincronización de Lotes:</strong> Descarga de registros almacenados en el buffer offline del terminal.
+                                </div>
+                                <div class="p-2 bg-slate-950 rounded border border-slate-800">
+                                    <strong>CU-06: Emisión de Pre-Nómina:</strong> Reporte automatizado de horas ordinarias y extras devengadas.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between border-t border-slate-800 pt-3 text-xs font-mono-tech text-slate-500">
+                    <span>SECCIÓN 05: DIAGRAMA DE FUNCIONALIDAD</span>
+                    <span>PÁGINA 06 / 14</span>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- SLIDE 6: CÓDIGO DE PROGRAMACIÓN Y FREERTOS -->
+            <!-- ========================================== -->
+            <section class="slide-pane" data-slide="6">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <span class="font-mono-tech text-xs text-cyan-400">06 // DESARROLLO TÉCNICO: CÓDIGO & FREERTOS</span>
+                    <span class="font-mono-tech text-xs text-slate-400">MULTITAREA SIMÉTRICA (SMP)</span>
+                </div>
+
+                <div class="my-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div class="space-y-4">
+                        <h2 class="font-orbitron font-bold text-3xl text-white">
+                            Estructura Modular del Firmware C++
+                        </h2>
+                        <p class="font-inter text-slate-300 text-sm leading-relaxed">
+                            El código aprovecha los dos núcleos del ESP32-S3 mediante el sistema operativo en tiempo real <strong>FreeRTOS</strong>:
+                        </p>
+                        <div class="space-y-2 font-mono-tech text-xs">
+                            <div class="p-3 bg-slate-900 border-l-4 border-cyan-400 rounded-r-lg">
+                                <strong class="text-cyan-300 block">CORE 0: PROTOCOLOS & HARDWARE E/S</strong>
+                                <span class="text-slate-300">Polling del MFRC522, lectura I2C del DS3231 y buffer en flash LittleFS.</span>
+                            </div>
+                            <div class="p-3 bg-slate-900 border-l-4 border-emerald-400 rounded-r-lg">
+                                <strong class="text-emerald-300 block">CORE 1: MOTOR GRÁFICO & MÁQUINA DE ESTADOS</strong>
+                                <span class="text-slate-300">Renderizado de alta velocidad por DMA en SPI 1 y procesamiento táctil.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 font-mono-tech text-xs text-slate-300 space-y-2">
+                        <div class="text-cyan-400 font-bold border-b border-slate-800 pb-1">
+                            // Fragmento de Configuración FreeRTOS (main.cpp)
+                        </div>
+                        <pre class="text-[11px] text-cyan-200 overflow-x-auto leading-relaxed">
+xTaskCreatePinnedToCore(
+    taskRFID_RTC,    // Función de E/S
+    "TaskIO",        // Nombre
+    4096,            // Stack (bytes)
+    NULL,            // Parámetro
+    2,               // Prioridad Alta
+    NULL,            // Handle
+    0                // Asignado a CORE 0
+);
+
+xTaskCreatePinnedToCore(
+    taskGUI_TFT,     // Función HMI
+    "TaskTFT",       // Nombre
+    8192,            // Stack (bytes)
+    NULL,            // Parámetro
+    1,               // Prioridad Media
+    NULL,            // Handle
+    1                // Asignado a CORE 1
+);
+                        </pre>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between border-t border-slate-800 pt-3 text-xs font-mono-tech text-slate-500">
+                    <span>SECCIÓN 06: CÓDIGO Y ESTRUCTURA DE FIRMWARE</span>
+                    <span>PÁGINA 07 / 14</span>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- SLIDE 7: PRESUPUESTO REAL (BOM) Y PRECIO SUGERIDO -->
+            <!-- ========================================== -->
+            <section class="slide-pane" data-slide="7">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <span class="font-mono-tech text-xs text-emerald-400">07 // PRESUPUESTO & LISTA DE MATERIALES</span>
+                    <span class="font-mono-tech text-xs text-slate-400">DATOS FACTURADOS REALES (MERCADOLIBRE)</span>
+                </div>
+
+                <div class="my-auto space-y-5">
+                    <div class="text-center max-w-3xl mx-auto">
+                        <h2 class="font-orbitron font-bold text-3xl text-white">
+                            Presupuesto Comparativo: Nacional vs Internacional
+                        </h2>
+                        <p class="font-inter text-slate-300 text-xs">
+                            Análisis de costos de fabricación en dos fases: Prototipado Rápido Local vs Producción a Escala Internacional.
+                        </p>
+                    </div>
+
+                    <div class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-900/90 font-mono-tech text-xs">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-950 text-cyan-400 border-b border-slate-800">
+                                <tr>
+                                    <th class="p-2.5">COMPONENTE</th>
+                                    <th class="p-2.5">FECHA COMPRA</th>
+                                    <th class="p-2.5 text-amber-300">COSTO NACIONAL (ML VENEZUELA)</th>
+                                    <th class="p-2.5 text-right text-emerald-300">COSTO INTERNACIONAL (ALIEXPRESS/LCSC)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800 text-slate-300 text-[11px]">
+                                <tr>
+                                    <td class="p-2.5 font-bold text-white">ESP32-S3 Wroom-1 N16R8 Dual Core</td>
+                                    <td class="p-2.5 text-slate-400">19/06/2026</td>
+                                    <td class="p-2.5 text-slate-200">Bs. 8.199,79 <span class="text-amber-400 font-bold">(~$12.50 USD)</span></td>
+                                    <td class="p-2.5 text-right text-emerald-400 font-bold">$4.80 USD</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2.5 font-bold text-white">Pantalla LCD TFT 2.8" SPI ILI9341</td>
+                                    <td class="p-2.5 text-slate-400">19/06/2026</td>
+                                    <td class="p-2.5 text-slate-200">Bs. 9.547,83 <span class="text-amber-400 font-bold">(~$14.50 USD)</span></td>
+                                    <td class="p-2.5 text-right text-emerald-400 font-bold">$5.50 USD</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2.5 font-bold text-white">Módulo RFID RC522 + Tarjetas NFC</td>
+                                    <td class="p-2.5 text-slate-400">16/06/2026</td>
+                                    <td class="p-2.5 text-slate-200">Bs. 2.962,58 <span class="text-amber-400 font-bold">(~$5.00 USD)</span></td>
+                                    <td class="p-2.5 text-right text-emerald-400 font-bold">$1.40 USD</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2.5 font-bold text-white">Módulo RTC DS3231 I2C Tiempo Real TCXO</td>
+                                    <td class="p-2.5 text-slate-400">16/06/2026</td>
+                                    <td class="p-2.5 text-slate-200">Bs. 3.258,84 <span class="text-amber-400 font-bold">(~$5.50 USD)</span></td>
+                                    <td class="p-2.5 text-right text-emerald-400 font-bold">$1.80 USD</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2.5 font-bold text-white">Batería de Respaldo Litio LIR2032 (3.6V Recargable)</td>
+                                    <td class="p-2.5 text-slate-400">20/06/2026</td>
+                                    <td class="p-2.5 text-slate-200">Bs. 6.730,64 <span class="text-amber-400 font-bold">(~$10.00 USD)</span></td>
+                                    <td class="p-2.5 text-right text-emerald-400 font-bold">$1.80 USD</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2.5 font-bold text-white">Chasis ABS Pared, Buzzer, LEDs y Conectores</td>
+                                    <td class="p-2.5 text-slate-400">—</td>
+                                    <td class="p-2.5 text-slate-200">Insumos Varios <span class="text-amber-400 font-bold">(~$4.50 USD)</span></td>
+                                    <td class="p-2.5 text-right text-emerald-400 font-bold">$3.50 USD</td>
+                                </tr>
+                                <tr class="bg-slate-950 font-bold text-xs">
+                                    <td class="p-2.5 text-cyan-300" colspan="2">TOTAL COSTO DE FABRICACIÓN (BOM):</td>
+                                    <td class="p-2.5 text-amber-400 font-orbitron">~$52.00 USD <span class="text-[10px] text-slate-400 font-mono-tech">(Bs. 30.699+)</span></td>
+                                    <td class="p-2.5 text-right text-emerald-400 font-orbitron">~$18.80 USD</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 font-mono-tech text-xs">
+                        <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl">
+                            <span class="text-slate-400 block text-[10px]">PRECIO SUGERIDO VENTA</span>
+                            <span class="font-orbitron font-bold text-lg text-white">$150.00 - $160.00 USD</span>
+                            <span class="text-[11px] text-slate-400 block mt-0.5">Terminal + 25 tarjetas</span>
+                        </div>
+                        <div class="p-3 bg-amber-950/30 border border-amber-500/40 rounded-xl">
+                            <span class="text-amber-400 block text-[10px]">MARGEN PROTOTIPO LOCAL</span>
+                            <span class="font-orbitron font-bold text-lg text-amber-300">67.5%</span>
+                            <span class="text-[11px] text-slate-400 block mt-0.5">Adquisición MercadoLibre Vzla</span>
+                        </div>
+                        <div class="p-3 bg-emerald-950/30 border border-emerald-500/40 rounded-xl">
+                            <span class="text-emerald-400 block text-[10px]">MARGEN PRODUCCIÓN ESCALA</span>
+                            <span class="font-orbitron font-bold text-lg text-emerald-300">88.2%</span>
+                            <span class="text-[11px] text-slate-400 block mt-0.5">Importación Mayorista / Lote</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between border-t border-slate-800 pt-3 text-xs font-mono-tech text-slate-500">
+                    <span>SECCIÓN 07: PRESUPUESTO REAL FACTURADO</span>
+                    <span>PÁGINA 08 / 14</span>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- SLIDE 8: DEMO EN VIVO: SIMULADOR DE TERMINAL (STAND) -->
+            <!-- ========================================== -->
+            <section class="slide-pane" data-slide="8" id="slide-terminal-simulator">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <span class="font-mono-tech text-xs text-cyan-400">08 // STAND Y DEMOSTRACIÓN EN VIVO</span>
+                    <span class="font-mono-tech text-xs text-emerald-400 animate-pulse">● PROYECTO FUNCIONANDO</span>
+                </div>
+
+                <div class="my-auto grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                    <!-- TERMINAL ILI9341 DE PARED -->
+                    <div class="md:col-span-7 flex flex-col items-center">
+                        <div class="w-full max-w-[460px] p-5 rounded-3xl bg-gradient-to-b from-slate-800 to-slate-950 border-4 border-slate-700 shadow-2xl relative">
+                            <div class="flex items-center justify-between mb-3 px-2">
+                                <div class="flex items-center space-x-2">
+                                    <div id="hw-led-green" class="w-3 h-3 rounded-full bg-emerald-950 border border-emerald-800 transition-all duration-300"></div>
+                                    <div id="hw-led-red" class="w-3 h-3 rounded-full bg-red-950 border border-red-800 transition-all duration-300"></div>
+                                    <span class="text-[11px] font-mono-tech text-slate-400">TERMINAL TRAZLINK WORK-ID</span>
+                                </div>
+                                <div class="flex items-center space-x-2 text-[10px] font-mono-tech text-cyan-400">
+                                    <i class="fa-solid fa-wifi"></i>
+                                    <span>ESP32-S3</span>
+                                </div>
+                            </div>
+
+                            <!-- PANTALLA TFT ILI9341 -->
+                            <div id="tft-screen" class="lcd-display rounded-xl p-4 text-center select-none min-h-[240px] flex flex-col justify-between transition-all duration-300">
+                                <div class="flex justify-between items-center text-[10px] font-mono-tech text-cyan-400 border-b border-cyan-900/60 pb-1">
+                                    <span>TRAZLINK™ WORK-ID</span>
+                                    <span id="tft-event-mode" class="px-2 py-0.5 rounded bg-cyan-950 border border-cyan-800 text-cyan-300 font-bold">MODO: ENTRADA</span>
+                                    <span>24.5°C RTC</span>
+                                </div>
+
+                                <!-- Vista de Reposo -->
+                                <div id="tft-standby-view" class="my-auto py-2 space-y-1">
+                                    <div id="tft-clock" class="font-orbitron font-black text-4xl text-white tracking-widest glow-cyan">
+                                        12:00:00
+                                    </div>
+                                    <div id="tft-date" class="font-mono-tech text-xs text-slate-400">
+                                        LUNES, 16 DE NOVIEMBRE 2026
+                                    </div>
+                                    <div class="inline-block mt-2 px-3 py-1 rounded bg-slate-900 border border-cyan-800/80 text-[11px] font-mono-tech text-cyan-300">
+                                        TURNO ACTIVO: <span class="text-white font-bold">MATUTINO (07:00 - 15:00)</span>
+                                    </div>
+                                    <p class="text-[11px] font-rajdhani text-cyan-400 animate-pulse mt-3">
+                                        &gt;&gt; APROXIME SU CARNET AL SENSOR RFID &lt;&lt;
+                                    </p>
+                                </div>
+
+                                <!-- Vista de Marcaje Exitoso -->
+                                <div id="tft-punch-view" class="my-auto py-1 space-y-2 hidden">
+                                    <div class="inline-flex items-center space-x-1.5 px-3 py-0.5 rounded bg-emerald-950/90 border border-emerald-500 text-emerald-300 text-xs font-mono-tech font-bold">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                        <span id="punch-status-text">¡ASISTENCIA REGISTRADA!</span>
+                                    </div>
+                                    <div id="punch-emp-name" class="font-orbitron font-bold text-lg text-white">ANGEL DELGADO</div>
+                                    <div class="text-xs font-mono-tech text-slate-300">
+                                        <span id="punch-emp-id">C.I. 30.663.790</span> • <span id="punch-emp-role" class="text-cyan-300">Personal Autorizado</span>
+                                    </div>
+                                    <div class="p-2 bg-slate-900/90 rounded border border-slate-800 text-[11px] font-mono-tech space-y-0.5">
+                                        <div class="flex justify-between text-slate-300">
+                                            <span>HORA RTC:</span> <span id="punch-time-rtc" class="text-white font-bold">12:35:10</span>
+                                        </div>
+                                        <div class="flex justify-between text-slate-300">
+                                            <span>DIAGNÓSTICO:</span> <span id="punch-timing-badge" class="text-emerald-400 font-bold">PUNTUAL (0 MIN)</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Vista de Tarjeta Denegada -->
+                                <div id="tft-denied-view" class="my-auto py-3 space-y-2 hidden">
+                                    <div class="w-10 h-10 rounded-full bg-red-950/80 border border-red-500 text-red-400 flex items-center justify-center mx-auto text-lg animate-bounce">
+                                        <i class="fa-solid fa-ban"></i>
+                                    </div>
+                                    <div class="font-orbitron font-bold text-red-400 text-base">ACCESO DENEGADO</div>
+                                    <p class="font-mono-tech text-xs text-slate-300">TARJETA NO REGISTRADA</p>
+                                    <p class="font-mono-tech text-[10px] text-slate-400">UID: FF:FF:FF:FF</p>
+                                </div>
+
+                                <div class="text-[9px] font-mono-tech text-slate-500 border-t border-slate-800/80 pt-1 flex justify-between">
+                                    <span>DS3231 TCXO + LIR2032 OK</span>
+                                    <span>BUS SPI1 DMA @ 40MHz</span>
+                                </div>
+                            </div>
+
+                            <!-- Botones Táctiles de Evento -->
+                            <div class="grid grid-cols-4 gap-2 mt-4 text-[10px] font-mono-tech">
+                                <button class="btn-tft-mode py-1.5 px-1 rounded bg-cyan-950/70 border border-cyan-500/80 text-cyan-300 hover:bg-cyan-500 hover:text-black transition active:scale-95" data-mode="ENTRADA">ENTRADA</button>
+                                <button class="btn-tft-mode py-1.5 px-1 rounded bg-slate-900 border border-slate-700 text-slate-300 hover:bg-cyan-500 hover:text-black transition active:scale-95" data-mode="SALIDA ALMUERZO">ALMUERZO</button>
+                                <button class="btn-tft-mode py-1.5 px-1 rounded bg-slate-900 border border-slate-700 text-slate-300 hover:bg-cyan-500 hover:text-black transition active:scale-95" data-mode="RETORNO ALMUERZO">RETORNO</button>
+                                <button class="btn-tft-mode py-1.5 px-1 rounded bg-slate-900 border border-slate-700 text-slate-300 hover:bg-cyan-500 hover:text-black transition active:scale-95" data-mode="SALIDA">SALIDA</button>
+                            </div>
+
+                            <div class="mt-4 p-2.5 rounded-xl border border-dashed border-cyan-500/30 bg-cyan-950/20 text-center font-mono-tech text-[11px] text-cyan-300 flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-rss text-cyan-400 animate-pulse"></i>
+                                <span>ANTENA RFID MFRC522 (BUS SPI 2 AISLADO)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ESTANTE DE CARNETS DEL EQUIPO -->
+                    <div class="md:col-span-5 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-orbitron font-semibold text-white text-sm flex items-center space-x-2">
+                                <i class="fa-solid fa-id-badge text-cyan-400"></i>
+                                <span>Carnets de Personal Corporativo</span>
+                            </h3>
+                            <span class="text-[10px] font-mono-tech text-slate-400">CLICK PARA MARCAR</span>
+                        </div>
+
+                        <div class="space-y-2 max-h-[360px] overflow-y-auto pr-1">
+                            <div class="card-rfid-sample p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-400 cursor-pointer transition flex items-center justify-between group shadow" 
+                                 data-name="Angel Delgado" data-ci="30.663.790" data-role="Personal de Planta" data-uid="8A:3F:C2:91" data-dept="Operaciones">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-9 h-9 rounded-lg bg-cyan-950 border border-cyan-500/40 text-cyan-400 flex items-center justify-center font-orbitron font-bold text-xs group-hover:scale-110 transition">
+                                        AD
+                                    </div>
+                                    <div>
+                                        <h4 class="font-rajdhani font-bold text-white text-sm leading-tight">Angel Delgado</h4>
+                                        <span class="text-[11px] font-mono-tech text-slate-400">C.I. 30.663.790</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-mono-tech text-cyan-400 group-hover:translate-x-1 transition"><i class="fa-solid fa-wifi"></i> Tap</span>
+                            </div>
+
+                            <div class="card-rfid-sample p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-400 cursor-pointer transition flex items-center justify-between group shadow" 
+                                 data-name="Carlos García" data-ci="31.507.848" data-role="Personal de Planta" data-uid="4C:19:B7:02" data-dept="Operaciones">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-9 h-9 rounded-lg bg-cyan-950 border border-cyan-500/40 text-cyan-400 flex items-center justify-center font-orbitron font-bold text-xs group-hover:scale-110 transition">
+                                        CG
+                                    </div>
+                                    <div>
+                                        <h4 class="font-rajdhani font-bold text-white text-sm leading-tight">Carlos García</h4>
+                                        <span class="text-[11px] font-mono-tech text-slate-400">C.I. 31.507.848</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-mono-tech text-cyan-400 group-hover:translate-x-1 transition"><i class="fa-solid fa-wifi"></i> Tap</span>
+                            </div>
+
+                            <div class="card-rfid-sample p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-400 cursor-pointer transition flex items-center justify-between group shadow" 
+                                 data-name="Williamsnis Acosta" data-ci="31.797.435" data-role="Personal de Planta" data-uid="5E:82:11:DA" data-dept="Operaciones">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-9 h-9 rounded-lg bg-cyan-950 border border-cyan-500/40 text-cyan-400 flex items-center justify-center font-orbitron font-bold text-xs group-hover:scale-110 transition">
+                                        WA
+                                    </div>
+                                    <div>
+                                        <h4 class="font-rajdhani font-bold text-white text-sm leading-tight">Williamsnis Acosta</h4>
+                                        <span class="text-[11px] font-mono-tech text-slate-400">C.I. 31.797.435</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-mono-tech text-cyan-400 group-hover:translate-x-1 transition"><i class="fa-solid fa-wifi"></i> Tap</span>
+                            </div>
+
+                            <div class="card-rfid-sample p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-400 cursor-pointer transition flex items-center justify-between group shadow" 
+                                 data-name="Corina Suárez" data-ci="31.786.288" data-role="Personal de Planta" data-uid="91:20:FE:44" data-dept="Operaciones">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-9 h-9 rounded-lg bg-cyan-950 border border-cyan-500/40 text-cyan-400 flex items-center justify-center font-orbitron font-bold text-xs group-hover:scale-110 transition">
+                                        CS
+                                    </div>
+                                    <div>
+                                        <h4 class="font-rajdhani font-bold text-white text-sm leading-tight">Corina Suárez</h4>
+                                        <span class="text-[11px] font-mono-tech text-slate-400">C.I. 31.786.288</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-mono-tech text-cyan-400 group-hover:translate-x-1 transition"><i class="fa-solid fa-wifi"></i> Tap</span>
+                            </div>
+
+                            <div class="card-rfid-sample p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-400 cursor-pointer transition flex items-center justify-between group shadow" 
+                                 data-name="Alexis Gutierrez" data-ci="31.563.986" data-role="Personal de Planta" data-uid="33:7A:49:EE" data-dept="Operaciones">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-9 h-9 rounded-lg bg-cyan-950 border border-cyan-500/40 text-cyan-400 flex items-center justify-center font-orbitron font-bold text-xs group-hover:scale-110 transition">
+                                        AG
+                                    </div>
+                                    <div>
+                                        <h4 class="font-rajdhani font-bold text-white text-sm leading-tight">Alexis Gutierrez</h4>
+                                        <span class="text-[11px] font-mono-tech text-slate-400">C.I. 31.563.986</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-mono-tech text-cyan-400 group-hover:translate-x-1 transition"><i class="fa-solid fa-wifi"></i> Tap</span>
+                            </div>
+
+                            <!-- Tarjeta No Autorizada -->
+                            <div class="card-rfid-sample p-2.5 rounded-xl bg-slate-900 border border-red-900/60 hover:border-red-500 cursor-pointer transition flex items-center justify-between group shadow" 
+                                 data-name="Desconocido" data-ci="00.000.000" data-role="Intruso" data-uid="FF:FF:FF:FF" data-dept="No Autorizado" data-unauthorized="true">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-9 h-9 rounded-lg bg-red-950 border border-red-500/40 text-red-400 flex items-center justify-center font-orbitron font-bold text-xs group-hover:scale-110 transition">
+                                        ✕
+                                    </div>
+                                    <div>
+                                        <h4 class="font-rajdhani font-bold text-red-400 text-sm leading-tight">Tarjeta No Registrada</h4>
+                                        <span class="text-[11px] font-mono-tech text-slate-500">Prueba de Seguridad (UID desconocido)</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-mono-tech text-red-400 group-hover:translate-x-1 transition"><i class="fa-solid fa-shield-halved"></i> Probar</span>
+                            </div>
+                        </div>
+
+                        <!-- Mini log local de auditoría -->
+                        <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 text-[10px] font-mono-tech">
+                            <div class="text-slate-400 mb-1 flex justify-between">
+                                <span>BUFFER NO VOLÁTIL (LITTLEFS / NVS)</span>
+                                <span id="audit-count" class="text-cyan-400">0 REGISTROS</span>
+                            </div>
+                            <div id="audit-log" class="text-slate-500 space-y-1 max-h-16 overflow-y-auto">
+                                <div>[SISTEMA] Terminal TrazLink Work-ID activo. RTC calibrado. Esperando aproximación RFID...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between border-t border-slate-800 pt-3 text-xs font-mono-tech text-slate-500">
+                    <span>SECCIÓN 08: DEMOSTRACIÓN EN EL STAND</span>
+                    <span>PÁGINA 09 / 14</span>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- SLIDE 9: CALCULADORA DE NÓMINA EN VIVO -->
+            <!-- ========================================== -->
+            <section class="slide-pane" data-slide="9">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <span class="font-mono-tech text-xs text-emerald-400">09 // SIMULADOR DE CÓMPUTO SALARIAL</span>
+                    <span class="font-mono-tech text-xs text-slate-400">PAYROLL ENGINE EN TIEMPO REAL</span>
+                </div>
+
+                <div class="my-auto space-y-5">
+                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
+                        <div>
+                            <h2 class="font-orbitron font-bold text-2xl md:text-3xl text-white">
+                                Algoritmo de Cómputo de Horas y Pre-Nómina
+                            </h2>
+                            <p class="font-inter text-slate-300 text-xs">
+                                Modifica los horarios para verificar el cálculo automático de horas ordinarias, extras y retardos.
+                            </p>
+                        </div>
+                        <div class="text-xs font-mono-tech text-cyan-400 bg-cyan-950/60 px-3 py-1.5 rounded-lg border border-cyan-800">
+                            Tarifa Base de Referencia: <strong class="text-white">$5.00 / hora</strong>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                        <div class="md:col-span-5 p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4 font-mono-tech text-xs">
+                            <div>
+                                <label class="block text-slate-400 mb-1">EMPLEADO SELECCIONADO:</label>
+                                <select id="calc-emp" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs">
+                                    <option value="Angel Delgado">Angel Delgado (C.I. 30.663.790)</option>
+                                    <option value="Carlos García">Carlos García (C.I. 31.507.848)</option>
+                                    <option value="Williamsnis Acosta">Williamsnis Acosta (C.I. 31.797.435)</option>
+                                    <option value="Corina Suárez">Corina Suárez (C.I. 31.786.288)</option>
+                                    <option value="Alexis Gutierrez">Alexis Gutierrez (C.I. 31.563.986)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-slate-400 mb-1">TURNO ASIGNADO:</label>
+                                <select id="calc-shift" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs">
+                                    <option value="matutino">Matutino (07:00 a 15:00 - 8 Horas)</option>
+                                    <option value="vespertino">Vespertino (15:00 a 23:00 - 8 Horas)</option>
+                                    <option value="nocturno">Nocturno (23:00 a 07:00 - 8 Horas +30%)</option>
+                                </select>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-slate-400 mb-1">HORA ENTRADA:</label>
+                                    <input type="time" id="calc-in-time" value="07:00" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-cyan-300">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-400 mb-1">HORA SALIDA:</label>
+                                    <input type="time" id="calc-out-time" value="17:30" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-emerald-300">
+                                </div>
+                            </div>
+
+                            <button id="btn-recalc" class="w-full py-2.5 bg-cyan-600 hover:bg-cyan-500 text-black font-orbitron font-bold rounded-lg transition active:scale-95 shadow-lg">
+                                RECALCULAR LIQUIDACIÓN
+                            </button>
+                        </div>
+
+                        <div class="md:col-span-7 p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+                            <h3 class="font-orbitron font-semibold text-white text-sm flex justify-between items-center">
+                                <span>Liquidación Forense Calculada</span>
+                                <span class="text-xs font-mono-tech text-emerald-400">DESGLOSE AUTOMÁTICO</span>
+                            </h3>
+
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 font-mono-tech text-xs">
+                                <div class="p-3 bg-slate-900 rounded-xl border border-slate-800">
+                                    <span class="text-slate-400 block text-[10px]">HORAS ORDINARIAS</span>
+                                    <span id="res-ord-hours" class="text-white font-bold text-lg">8.00 h</span>
+                                    <span id="res-ord-pay" class="text-xs text-slate-400 block mt-1">$40.00</span>
+                                </div>
+
+                                <div class="p-3 bg-slate-900 rounded-xl border border-slate-800">
+                                    <span class="text-slate-400 block text-[10px]">HORAS EXTRA (+50%)</span>
+                                    <span id="res-ext-hours" class="text-amber-400 font-bold text-lg">2.50 h</span>
+                                    <span id="res-ext-pay" class="text-xs text-amber-300 block mt-1">$18.75</span>
+                                </div>
+
+                                <div class="p-3 bg-slate-900 rounded-xl border border-slate-800">
+                                    <span class="text-slate-400 block text-[10px]">PUNTUALIDAD</span>
+                                    <span id="res-delay-min" class="text-emerald-400 font-bold text-lg">PUNTUAL</span>
+                                    <span id="res-delay-desc" class="text-xs text-slate-400 block mt-1">0 min retardo</span>
+                                </div>
+                            </div>
+
+                            <div class="p-4 rounded-xl bg-gradient-to-r from-cyan-950/80 to-slate-900 border border-cyan-500/40 flex items-center justify-between">
+                                <div>
+                                    <span class="text-xs font-mono-tech text-cyan-300 block">TOTAL DEVENGADO POR LA JORNADA</span>
+                                    <span class="text-[11px] text-slate-400">Base ordinaria + Horas extras</span>
+                                </div>
+                                <div class="text-right">
+                                    <span id="res-total-pay" class="font-orbitron font-black text-3xl text-emerald-400 glow-emerald">$58.75</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between border-t border-slate-800 pt-3 text-xs font-mono-tech text-slate-500">
+                    <span>SECCIÓN 09: CÓMPUTO DE NÓMINA EN VIVO</span>
+                    <span>PÁGINA 10 / 14</span>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- SLIDE 10: MARKETING Y VIDEO PROMOCIONAL (TIKTOK) -->
+            <!-- ========================================== -->
+            <section class="slide-pane" data-slide="10">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <span class="font-mono-tech text-xs text-cyan-400">10 // MARKETING & APERTURA DEL STAND</span>
+                    <span class="font-mono-tech text-xs text-slate-400">REQUERIMIENTO OFICIAL DEL DOCENTE</span>
+                </div>
+
+                <div class="my-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div class="space-y-4">
+                        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-md bg-cyan-950/70 border border-cyan-500/40 text-cyan-300 text-xs font-mono-tech">
+                            <i class="fa-brands fa-tiktok"></i>
+                            <span>Video Promocional (15 - 30 Segundos)</span>
+                        </div>
+                        <h2 class="font-orbitron font-bold text-3xl text-white">
+                            Estrategia de Difusión y Apertura
+                        </h2>
+                        <p class="font-inter text-slate-300 text-sm leading-relaxed">
+                            Siguiendo las instrucciones de la pizarra, la presentación del stand se inaugura con un video dinámico de TikTok demostrando el terminal en funcionamiento real:
+                        </p>
+                        <div class="space-y-2 font-mono-tech text-xs text-slate-300">
+                            <div class="p-2.5 bg-slate-900 rounded-lg border-l-2 border-cyan-400">
+                                <strong>Segundos 00-08:</strong> El problema del libro de firmas manual y las pérdidas por retardos.
+                            </div>
+                            <div class="p-2.5 bg-slate-900 rounded-lg border-l-2 border-emerald-400">
+                                <strong>Segundos 08-20:</strong> Pase del carnet por el terminal, beep del buzzer y pantalla TFT mostrando la asistencia instantánea.
+                            </div>
+                            <div class="p-2.5 bg-slate-900 rounded-lg border-l-2 border-amber-400">
+                                <strong>Segundos 20-30:</strong> Generación automática del cálculo salarial y llamado a la acción comercial.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4 text-center">
+                        <div class="w-16 h-16 rounded-full bg-cyan-950/80 border border-cyan-500 text-cyan-400 flex items-center justify-center text-3xl mx-auto">
+                            <i class="fa-solid fa-play"></i>
+                        </div>
+                        <h3 class="font-orbitron font-bold text-white text-lg">Pauta Audiovisual del Stand</h3>
+                        <p class="font-inter text-xs text-slate-300 leading-relaxed max-w-sm mx-auto">
+                            El stand estará decorado con la temática oficial de <strong>Industria y Productividad</strong>, proyectando el video introductorio previo a la demostración interactiva en vivo con los profesores.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between border-t border-slate-800 pt-3 text-xs font-mono-tech text-slate-500">
+                    <span>SECCIÓN 10: MARKETING Y REDES</span>
+                    <span>PÁGINA 11 / 14</span>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- SLIDE 11: CONCLUSIONES Y MÉTRICAS DE ÉXITO -->
+            <!-- ========================================== -->
+            <section class="slide-pane" data-slide="11">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <span class="font-mono-tech text-xs text-emerald-400">11 // CONCLUSIONES FORMALES</span>
+                    <span class="font-mono-tech text-xs text-slate-400">MÉTRICAS DE ALCANCE</span>
+                </div>
+
+                <div class="my-auto space-y-6">
+                    <div class="text-center max-w-2xl mx-auto">
+                        <h2 class="font-orbitron font-bold text-3xl text-white">
+                            Estado Final del Proyecto y Métricas
+                        </h2>
+                        <p class="font-inter text-slate-300 text-xs">
+                            Evaluación objetiva según la rúbrica indicada por el docente.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono-tech text-xs">
+                        <div class="p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-2 text-center">
+                            <span class="text-slate-400 text-[10px] uppercase block">Porcentaje de Avance</span>
+                            <div class="font-orbitron font-black text-4xl text-cyan-400 glow-cyan">85%</div>
+                            <p class="font-inter text-slate-300 text-xs">
+                                Firmware, lógica de buses, RTC, FSM, simulación interactiva y documentación técnica completados.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-2 text-center">
+                            <span class="text-slate-400 text-[10px] uppercase block">Porcentaje de Éxito</span>
+                            <div class="font-orbitron font-black text-4xl text-emerald-400 glow-emerald">100%</div>
+                            <p class="font-inter text-slate-300 text-xs">
+                                Cumplimiento total de detección RFID sin contención de bus, cero deriva horaria y cómputo determinista.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-2 text-center">
+                            <span class="text-slate-400 text-[10px] uppercase block">Hardware Reutilizado</span>
+                            <div class="font-orbitron font-black text-4xl text-amber-400">100%</div>
+                            <p class="font-inter text-slate-300 text-xs">
+                                Reutilización integral de los módulos probados de AulaLink sin requerir inversión adicional en piezas.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between border-t border-slate-800 pt-3 text-xs font-mono-tech text-slate-500">
+                    <span>SECCIÓN 11: CONCLUSIONES Y MÉTRICAS</span>
+                    <span>PÁGINA 12 / 14</span>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- SLIDE 12: CIERRE Y AGRADECIMIENTOS -->
+            <!-- ========================================== -->
+            <section class="slide-pane" data-slide="12">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <span class="font-mono-tech text-xs text-cyan-400">12 // CIERRE DE PRESENTACIÓN</span>
+                    <span class="font-mono-tech text-xs text-slate-400">UNEFA 2026</span>
+                </div>
+
+                <div class="flex flex-col items-center justify-center text-center my-auto py-6 space-y-6">
+                    <div class="w-16 h-16 rounded-2xl bg-cyan-950/80 border border-cyan-500 text-cyan-400 flex items-center justify-center text-3xl shadow-xl shadow-cyan-950/50">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+
+                    <h2 class="font-orbitron font-black text-4xl md:text-5xl text-white">
+                        TRAZLINK<span class="text-cyan-400">™</span> WORK-ID
+                    </h2>
+                    <p class="font-inter text-slate-300 max-w-xl text-sm leading-relaxed">
+                        <em>"Trazabilidad forense e identidad laboral en el borde."</em><br>
+                        Sistema Embebido de Control de Asistencia, Turnos y Nómina.<br>
+                        <span class="text-cyan-400 font-mono-tech">Área Oficial: Industria y Productividad • Arquitectura ESP32-S3</span>
+                    </p>
+
+                    <!-- EQUIPO -->
+                    <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 max-w-2xl w-full text-center">
+                        <span class="text-xs font-mono-tech text-cyan-400 uppercase tracking-widest block mb-2">Equipo de Desarrollo</span>
+                        <div class="flex flex-wrap justify-center gap-3 text-xs font-mono-tech text-slate-300">
+                            <span>Angel Delgado (30.663.790)</span> • 
+                            <span>Carlos García (31.507.848)</span> • 
+                            <span>Williamsnis Acosta (31.797.435)</span> • 
+                            <span>Corina Suárez (31.786.288)</span> • 
+                            <span>Alexis Gutierrez (31.563.986)</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 flex items-center space-x-4">
+                        <button id="btn-restart" class="px-6 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-black font-orbitron font-bold text-xs transition active:scale-95 shadow-lg">
+                            <i class="fa-solid fa-rotate-left mr-2"></i> REINICIAR PRESENTACIÓN
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between border-t border-slate-800 pt-3 text-xs font-mono-tech text-slate-500">
+                    <span>FIN DE LA DEFENSA</span>
+                    <span class="text-emerald-400">¡GRACIAS POR SU ATENCIÓN!</span>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- FOOTER HUD INFERIOR -->
+    <footer class="w-full bg-slate-950/90 border-t border-slate-800/80 px-6 py-2 flex items-center justify-between z-40 fixed bottom-0 left-0 text-xs font-mono-tech text-slate-400">
+        <div class="flex items-center space-x-4">
+            <span class="text-cyan-400 font-bold">TRAZLINK WORK-ID</span>
+            <span class="hidden sm:inline">ESP32-S3 N16R8 • Industria y Productividad</span>
+        </div>
+        <div class="flex items-center space-x-4">
+            <span>Atajos: [← / →] Moverse • [Espacio] Avanzar • [F] Pantalla Completa</span>
+        </div>
+    </footer>
+
+    <!-- SCRIPT DE NAVEGACIÓN, AUDIO SINTETIZADO Y SIMULACIÓN EN VIVO -->
+    <script>
+        const slides = document.querySelectorAll('.slide-pane');
+        const totalSlides = slides.length;
+        let currentSlide = 0;
+
+        const numCurrent = document.getElementById('slide-num-current');
+        const numTotal = document.getElementById('slide-num-total');
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+        const btnJumpSim = document.getElementById('btn-jump-sim');
+        const btnRestart = document.getElementById('btn-restart');
+        const btnFullscreen = document.getElementById('btn-fullscreen');
+        const btnSound = document.getElementById('btn-sound');
+        const soundIcon = document.getElementById('sound-icon');
+
+        let soundEnabled = true;
+
+        numTotal.textContent = String(totalSlides).padStart(2, '0');
+
+        function updateSlide(index) {
+            if (index < 0) index = 0;
+            if (index >= totalSlides) index = totalSlides - 1;
+            currentSlide = index;
+
+            slides.forEach((slide, i) => {
+                slide.classList.toggle('active', i === currentSlide);
+            });
+
+            numCurrent.textContent = String(currentSlide + 1).padStart(2, '0');
+            playSfx('click');
+        }
+
+        btnPrev.addEventListener('click', () => updateSlide(currentSlide - 1));
+        btnNext.addEventListener('click', () => updateSlide(currentSlide + 1));
+        btnRestart.addEventListener('click', () => updateSlide(0));
+        btnJumpSim.addEventListener('click', () => updateSlide(7));
+
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+                e.preventDefault();
+                updateSlide(currentSlide + 1);
+            } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                e.preventDefault();
+                updateSlide(currentSlide - 1);
+            } else if (e.key === 'f' || e.key === 'F') {
+                toggleFullscreen();
+            } else if (e.key === 'm' || e.key === 'M') {
+                toggleSound();
+            }
+        });
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+        btnFullscreen.addEventListener('click', toggleFullscreen);
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            soundIcon.className = soundEnabled ? 'fa-solid fa-volume-high text-cyan-400' : 'fa-solid fa-volume-xmark text-slate-500';
+        }
+        btnSound.addEventListener('click', toggleSound);
+
+        // Web Audio API
+        let audioCtx = null;
+        function getAudioContext() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            return audioCtx;
+        }
+
+        function playSfx(type) {
+            if (!soundEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, now);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+                    osc.start(now);
+                    osc.stop(now + 0.04);
+                } else if (type === 'beep-success') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(1200, now);
+                    osc.frequency.setValueAtTime(1800, now + 0.08);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
+                    osc.start(now);
+                    osc.stop(now + 0.22);
+                } else if (type === 'beep-denied') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.setValueAtTime(300, now + 0.12);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                }
+            } catch (err) {}
+        }
+
+        // Reloj RTC en vivo
+        const tftClock = document.getElementById('tft-clock');
+        function updateRtcClock() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            if (tftClock) tftClock.textContent = `${h}:${m}:${s}`;
+        }
+        setInterval(updateRtcClock, 1000);
+        updateRtcClock();
+
+        // Interacción RFID
+        let currentTerminalMode = "ENTRADA";
+        const tftEventModeBadge = document.getElementById('tft-event-mode');
+        const modeButtons = document.querySelectorAll('.btn-tft-mode');
+
+        modeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                modeButtons.forEach(b => {
+                    b.classList.remove('bg-cyan-950/70', 'border-cyan-500/80', 'text-cyan-300');
+                    b.classList.add('bg-slate-900', 'border-slate-700', 'text-slate-300');
+                });
+                btn.classList.add('bg-cyan-950/70', 'border-cyan-500/80', 'text-cyan-300');
+                btn.classList.remove('bg-slate-900', 'border-slate-700', 'text-slate-300');
+                currentTerminalMode = btn.getAttribute('data-mode');
+                tftEventModeBadge.textContent = `MODO: ${currentTerminalMode}`;
+                playSfx('click');
+            });
+        });
+
+        const standbyView = document.getElementById('tft-standby-view');
+        const punchView = document.getElementById('tft-punch-view');
+        const deniedView = document.getElementById('tft-denied-view');
+        const ledGreen = document.getElementById('hw-led-green');
+        const ledRed = document.getElementById('hw-led-red');
+        const auditLog = document.getElementById('audit-log');
+        const auditCount = document.getElementById('audit-count');
+
+        let auditRecordsCount = 0;
+        let punchResetTimer = null;
+
+        const rfidCards = document.querySelectorAll('.card-rfid-sample');
+
+        rfidCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const isUnauthorized = card.getAttribute('data-unauthorized') === 'true';
+                const name = card.getAttribute('data-name');
+                const ci = card.getAttribute('data-ci');
+                const role = card.getAttribute('data-role');
+                const uid = card.getAttribute('data-uid');
+
+                clearTimeout(punchResetTimer);
+
+                if (isUnauthorized) {
+                    playSfx('beep-denied');
+                    ledRed.className = "w-3 h-3 rounded-full bg-red-500 shadow-[0_0_12px_#ef4444]";
+                    ledGreen.className = "w-3 h-3 rounded-full bg-emerald-950 border border-emerald-800";
+
+                    standbyView.classList.add('hidden');
+                    punchView.classList.add('hidden');
+                    deniedView.classList.remove('hidden');
+
+                    logAuditRecord(`[ALERTA DENEGADO] Intento UID: ${uid} (No registrado)`);
+                    punchResetTimer = setTimeout(resetTerminalView, 3000);
+                } else {
+                    playSfx('beep-success');
+                    ledGreen.className = "w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_12px_#10b981]";
+                    ledRed.className = "w-3 h-3 rounded-full bg-red-950 border border-red-800";
+
+                    const now = new Date();
+                    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+
+                    document.getElementById('punch-status-text').textContent = `¡${currentTerminalMode} REGISTRADA!`;
+                    document.getElementById('punch-emp-name').textContent = name;
+                    document.getElementById('punch-emp-id').textContent = `C.I. ${ci}`;
+                    document.getElementById('punch-emp-role').textContent = role;
+                    document.getElementById('punch-time-rtc').textContent = timeStr;
+
+                    standbyView.classList.add('hidden');
+                    deniedView.classList.add('hidden');
+                    punchView.classList.remove('hidden');
+
+                    logAuditRecord(`[MARCAJE OK] ${currentTerminalMode} - ${name} (${ci}) @ ${timeStr}`);
+                    punchResetTimer = setTimeout(resetTerminalView, 4000);
+                }
+            });
+        });
+
+        function resetTerminalView() {
+            standbyView.classList.remove('hidden');
+            punchView.classList.add('hidden');
+            deniedView.classList.add('hidden');
+            ledGreen.className = "w-3 h-3 rounded-full bg-emerald-950 border border-emerald-800";
+            ledRed.className = "w-3 h-3 rounded-full bg-red-950 border border-red-800";
+        }
+
+        function logAuditRecord(msg) {
+            auditRecordsCount++;
+            auditCount.textContent = `${auditRecordsCount} REGISTROS`;
+            const entry = document.createElement('div');
+            entry.className = "text-slate-300";
+            entry.textContent = msg;
+            auditLog.prepend(entry);
+        }
+
+        // Calculadora de Nómina
+        const calcShift = document.getElementById('calc-shift');
+        const calcInTime = document.getElementById('calc-in-time');
+        const calcOutTime = document.getElementById('calc-out-time');
+        const btnRecalc = document.getElementById('btn-recalc');
+
+        const resOrdHours = document.getElementById('res-ord-hours');
+        const resOrdPay = document.getElementById('res-ord-pay');
+        const resExtHours = document.getElementById('res-ext-hours');
+        const resExtPay = document.getElementById('res-ext-pay');
+        const resDelayMin = document.getElementById('res-delay-min');
+        const resDelayDesc = document.getElementById('res-delay-desc');
+        const resTotalPay = document.getElementById('res-total-pay');
+
+        const BASE_RATE = 5.00;
+
+        function computePayroll() {
+            const inVal = calcInTime.value.split(':').map(Number);
+            const outVal = calcOutTime.value.split(':').map(Number);
+
+            const inMins = inVal[0] * 60 + inVal[1];
+            let outMins = outVal[0] * 60 + outVal[1];
+
+            if (outMins < inMins) outMins += 24 * 60;
+
+            const totalMins = outMins - inMins;
+            const totalHours = totalMins / 60;
+
+            let ordHours = Math.min(8, totalHours);
+            let extHours = Math.max(0, totalHours - 8);
+
+            let delayMinutes = Math.max(0, inMins - 430);
+
+            if (delayMinutes > 0) {
+                resDelayMin.textContent = `RETARDO: +${delayMinutes} MIN`;
+                resDelayMin.className = "text-amber-400 font-bold text-lg";
+                resDelayDesc.textContent = "Fuera de la ventana de gracia";
+            } else {
+                resDelayMin.textContent = "PUNTUAL";
+                resDelayMin.className = "text-emerald-400 font-bold text-lg";
+                resDelayDesc.textContent = "Marcaje dentro de horario legal";
+            }
+
+            const ordPay = ordHours * BASE_RATE;
+            const extPay = extHours * (BASE_RATE * 1.5);
+            const total = ordPay + extPay;
+
+            resOrdHours.textContent = `${ordHours.toFixed(2)} h`;
+            resOrdPay.textContent = `$${ordPay.toFixed(2)}`;
+            resExtHours.textContent = `${extHours.toFixed(2)} h`;
+            resExtPay.textContent = `$${extPay.toFixed(2)}`;
+            resTotalPay.textContent = `$${total.toFixed(2)}`;
+
+            playSfx('click');
+        }
+
+        btnRecalc.addEventListener('click', computePayroll);
+        calcShift.addEventListener('change', () => {
+            if (calcShift.value === 'matutino') {
+                calcInTime.value = "07:00";
+                calcOutTime.value = "17:30";
+            } else if (calcShift.value === 'vespertino') {
+                calcInTime.value = "15:00";
+                calcOutTime.value = "23:00";
+            } else if (calcShift.value === 'nocturno') {
+                calcInTime.value = "23:00";
+                calcOutTime.value = "07:30";
+            }
+            computePayroll();
+        });
+        calcInTime.addEventListener('change', computePayroll);
+        calcOutTime.addEventListener('change', computePayroll);
+
+        computePayroll();
+    </script>
+</body>
+</html>

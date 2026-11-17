@@ -1,0 +1,10 @@
+# Registro interno de fallos (aislado del control de versiones)
+Docs/Log_Errores.md
+
+# Dependencias y artefactos
+node_modules/
+.vercel
+dist/
+build/
+.env
+.env.local
